@@ -30,12 +30,22 @@ These are **research records, not tutorials.** They were run on a SLURM cluster 
 data that is not distributed with either repository, and their paths reflect that. To
 re-run one you need:
 
-1. `firefate` installed from the main repository:
+1. The `fftemporal` environment, which pins `dictys` 1.1.0 and the rest of the
+   runtime stack it needs — `pytorch` 2.3.1 (CUDA 11.8), `gimmemotifs`, `genomepy`,
+   `homer`, `macs2`, `samtools`, `bedtools`:
+   ```bash
+   conda env create -f environment.yml
+   conda activate fftemporal
+   ```
+2. `firefate` on top of it, editable from your own clone. It is deliberately **not**
+   in `environment.yml`: the package is under active development, so the environment
+   tracks whatever you have checked out rather than a pinned snapshot. `--no-deps`
+   keeps pip from re-resolving packages conda already placed:
    ```bash
    git clone https://github.com/sachha-naksha/FIREFate
-   cd FIREFate && pip install -e .
+   pip install -e FIREFate --no-deps
    ```
-2. Dataset paths pointed at your own copies. Every path lives in
+3. Dataset paths pointed at your own copies. Every path lives in
    `temporal/datasets.yaml` — edit that file, not the notebooks. Each temporal
    notebook already opens with the loader cell that reads it:
    ```python
@@ -44,8 +54,25 @@ re-run one you need:
    ```
    `temporal/SETUP.md` explains which roots are live on this cluster and which are
    dead PSC paths you have to repoint first.
-3. `dictys` (and, for the trajectory notebooks, `stream` / `palantir` / `scvelo` /
-   `multivelo`), which are not declared dependencies of `firefate`.
+4. For the trajectory notebooks only, `stream` / `palantir` / `scvelo` / `multivelo`.
+   These are **not** in `environment.yml` and should not be added to it: `dictys`
+   holds `anndata` at 0.6.22.post1, which is far older than those packages (and than
+   current `scanpy`, also absent here) expect. Build a separate environment for the
+   trajectory step and carry its output forward as files.
+
+### Regenerating environment.yml
+
+`environment.yml` is an export of the working `fftemporal` environment with the
+`firefate` line stripped, since that entry refers to a local editable install and
+resolves for nobody else:
+
+```bash
+conda env export -n fftemporal --no-builds \
+  | sed -e '/^      - firefate==/d' -e '/^prefix: /d' > environment.yml
+```
+
+It pins exact versions and is linux-64 only — the `homer` / `macs2` / `samtools`
+dependencies have no macOS or Windows builds.
 
 `NOTEBOOK_MIGRATION.md` records the import changes made when the FIREFate package was
 restructured around its three modules, with the old and new cell for each notebook.
