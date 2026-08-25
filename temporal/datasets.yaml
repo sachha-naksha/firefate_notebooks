@@ -1,33 +1,199 @@
-# Dataset locations for the multiome dynamic-regulation notebooks.
+# Dataset locations for the temporal notebooks.
 #
 # Read with:
 #     from firefate.io import DatasetPaths
-#     paths = DatasetPaths.from_yaml("datasets.yaml")
-#     paths.OUTPUT_FOLDER      # a scalar
-#     paths.PB["ep1"]          # a group, keyed ep1..epN
+#     config = DatasetPaths.from_yaml("../datasets.yaml")   # from analysis/, dynamic_grn/, trajectory/
+#     config.DYNAMIC_H5        # a scalar
+#     config.PB["ep1"]         # a group, keyed ep1..epN
 #
 # These are cluster-specific and deliberately live outside src/firefate/ so the
-# package stays installable anywhere. Edit them, don't edit the package.
+# package stays installable anywhere. Edit them, don't edit the notebooks.
 #
-# NOTE: the tcell root below is a PSC/ocean path that does not resolve on the
-# current cluster. It is carried over verbatim from the old analysis/config.py;
-# repoint it before running the T-cell notebooks.
+# Roots are grouped LIVE / DEAD below. The LIVE ones were verified to exist on the
+# current cluster; the DEAD ones are the PSC (/ocean) and bgdb paths the notebooks
+# were originally run against, kept verbatim as a provenance record. Repoint a dead
+# root before running the notebooks that use it -- everything below it then follows.
+#
+# Two caveats on the substitution:
+#   * every "{name}" in `scalars` and in a group `template` is filled from `roots`,
+#     so a path with any OTHER brace in it (e.g. "20frames-{branchname}.mp4") cannot
+#     live here -- it would raise KeyError. Keep the directory here and build the
+#     filename in the notebook.
+#   * quote any value containing "{", otherwise YAML reads it as a flow mapping.
 
 roots:
-  bcell: /work/nvme/bhdw/asachan/data_files/firefate/bcell
-  tcell: /ocean/projects/cis240075p/asachan/datasets/B_Cell/T_cell/outs/dictys/rbpj_ntc
-  figures: /projects/bhdw/asachan/papers/firefate/figures
-  inputs: "{bcell}/outs/intermediate_tmp_files"
-  enrichment: "{bcell}/outs/intermediate_tmp_files/direct_effect_enrichment"
+
+  # ---------------------------------------------------------------- LIVE ----
+  # Verified present on this cluster.
+
+  # B-cell dictys run (the "actb1_added_v2" run on PSC). {bcell}/data and
+  # {bcell}/outs mirror the old .../actb1_added_v2/{data,output}.
+  bcell:       /work/nvme/bhdw/asachan/data_files/firefate/bcell
+  bcell_data:  "{bcell}/data"
+  bcell_outs:  "{bcell}/outs"
+  bcell_lf:    "{bcell}/latent_factors"
+
+  # Per-window dictys working directories (Subset1..SubsetN). NOT under {bcell} --
+  # the notebooks that said "{bcell}/tmp_dynamic" were pointing at nothing.
+  tmp_dyn:     /work/hdd/bhdw/asachan/dictys_related/tmp_dynamic
+
+  inputs:      "{bcell_outs}/intermediate_tmp_files"
+  enrichment:  "{inputs}/direct_effect_enrichment"
+
+  # Where figures for the paper are written.
+  figures:     /projects/bhdw/asachan/papers/firefate/figures
+  scratch:     /projects/bhdw/asachan/tmp
+
+  # ---------------------------------------------------------------- DEAD ----
+  # No copy of these resolves on the current cluster. Repoint before running the
+  # T-cell, second-donor, velocity or raw-cellranger notebooks.
+
+  # T-cell (RBPJ / ETS1 / IKZF1 knockouts)
+  tcell:       /ocean/projects/cis240075p/asachan/datasets/B_Cell/T_cell/outs/dictys/rbpj_ntc
+  tcell_root:  /ocean/projects/cis240075p/asachan/datasets/B_Cell/T_cell
+  tcell_data:  "{tcell_root}/Data"
+  tcell_outs:  "{tcell_root}/outs"
+
+  # Male donor, pre-dictys (cellranger aggregate, STREAM, ATAC sorting)
+  donor1:      /ocean/projects/cis240075p/asachan/datasets/B_Cell/multiome_1st_donor_UPMC_aggr
+  # ...and the three per-day cellranger runs that were aggregated into it
+  donor1_d02:  /ocean/projects/cis240075p/asachan/datasets/B_Cell/multiome_1st_donor_UPMC_day0_2
+  donor1_d34:  /ocean/projects/cis240075p/asachan/datasets/B_Cell/multiome_1st_donor_UPMC_day3_4
+  donor1_d56:  /ocean/projects/cis240075p/asachan/datasets/B_Cell/multiome_1st_donor_UPMC_day5_6
+
+  # Female donor (second donor)
+  donor2:      /ocean/projects/cis240075p/asachan/datasets/B_Cell/multiome_2nd_donor
+
+  # IGVF single-cell preprocessing output (produced by a collaborator, not by us)
+  igvf_male:   /ocean/projects/cis240075p/skeshari/igvf/bcell1/male_donor/out_data/sc_preproc/out_files
+
+  # MultiVelo / velocyto inputs and outputs
+  velocity:    /work/hdd/bgdb/asachan/datasets/B_cell_dictys_actb1_added_v2
+  velocity_in: /projects/bgdb/asachan/datasets/Bcell_in_vitro_human
+
+  # TF motif databases
+  motifs:      /ocean/projects/cis240075p/asachan/datasets/TF_motif_files
+
 
 scalars:
-  # roots, exposed so notebooks can build ad-hoc paths
-  BCELL_BASE: "{bcell}"
-  TCELL_BASE: "{tcell}"
 
-  OUTPUT_FOLDER: "{figures}"
-  INPUT_FOLDER: "{inputs}"
-  CELL_LABELS: "{bcell}/data/clusters.csv"
+  # --- roots re-exposed, so notebooks can build ad-hoc paths -----------------
+  BCELL_BASE:            "{bcell}"
+  TCELL_BASE:            "{tcell}"
+  OUTPUT_FOLDER:         "{figures}"
+  INPUT_FOLDER:          "{inputs}"
+
+  # --- B-cell dictys: core objects ------------------------------------------
+  # analysis/*, dynamic_grn/dynamic_grn_b_cell
+  DYNAMIC_H5:            "{bcell_outs}/dynamic.h5"
+  DICTYS_DATA:           "{bcell_data}"
+  DICTYS_OUTPUT:         "{bcell_outs}"
+  TMP_DYNAMIC:           "{tmp_dyn}"
+  SUBSET_LOCS:           "{tmp_dyn}/subset_locs.h5"
+  PSEUDOTIME_WINDOWS:    "{bcell_outs}/psuedotime_values_of_windows.csv"
+  EPISODIC_GRN_DIR:      "{bcell_outs}/episodic_grns/84_percentile"
+  DICTYS_FIGURES:        "{bcell_outs}/figures"
+
+  # --- B-cell dictys: inputs ------------------------------------------------
+  CELL_LABELS:           "{bcell_data}/clusters.csv"
+  DAY_LABELS:            "{bcell_data}/day_labels.csv"
+  EXPRESSION_TSV:        "{bcell_data}/expression.tsv.gz"
+  EXPRESSION_DOT_GENES:  "{bcell_data}/expression_with_dot_genes.tsv.gz"
+  COORD_RNA:             "{bcell_data}/coord_rna.tsv.gz"
+  GENE_BED:              "{bcell_data}/gene.bed"
+  BLACKLIST_BED:         "{bcell_data}/blacklist.bed"
+  MOTIF_FILE:            "{bcell_data}/CisBP_Human_FigR_new_score.motif"
+  TRAJ_NODE:             "{bcell_data}/traj_node.h5"
+  TRAJ_CELL_RNA:         "{bcell_data}/traj_cell_rna.h5"
+
+  # --- Latent factors (SLIDE) -----------------------------------------------
+  # analysis/LF_*, analysis/episodic_enrichment, trajectory/traj_stream_male_donor
+  LF_FOLDER:             "{bcell_lf}"
+  LF_Z11_GC_PB:          "{bcell_lf}/feature_list_Z11_GC_PB.txt"
+  LF_Z3_GC_PB:           "{bcell_lf}/feature_list_Z3_GC_PB.txt"
+  LF_Z5_PRDM1_KO:        "{bcell_lf}/feature_list_Z5_PRDM1_KO.txt"
+  LF_Z4_IRF4_KO:         "{bcell_lf}/feature_list_Z4_IRF4_KO.txt"
+  Z_MATRIX_GC_PB:        "{bcell_lf}/z_matrix_GC_PB.csv"
+  Z_MATRIX_PREDISPOSED:  "{bcell_lf}/z_matrix_blimp1_ko_ntc_perturb_seq_cells_day4.csv"
+
+  # --- Intermediate results written by one notebook, read by another --------
+  EPISODIC_LINKS_CSV:    "{figures}/enriched_tf_lf_targets_per_episode.csv"
+  ES_BAR_DIR:            "{figures}/z11_episodic_enrichment"
+  FIGURES_SUPPL:         "{figures}"
+  SS_LINKS_CSV:          "{scratch}/ss_firefate_links_2B.csv"
+  ENRICHED_LINKS_PB:     "{inputs}/enriched_links_PB.csv"
+  FILTERED_EDGES_PB_EP4: "{inputs}/filtered_edges_significant_invariant_PB_ep4.parquet"
+  KO_PROGRAM_DIR:        "{inputs}/prdm1_ko/bcl6_dynamic_activity_KO_program"
+
+  # --- T-cell (DEAD root) ---------------------------------------------------
+  # analysis/t_cell_analysis, dynamic_grn/t_cell_dictys_data,
+  # trajectory/t_cell_{trajectory,imputation}
+  TCELL_OUTPUT:          "{tcell}/output"
+  TCELL_DATA:            "{tcell}/data"
+  TCELL_FIGS:            "{tcell}/output/figs"
+  TCELL_TMP_DYNAMIC:     "{tcell}/tmp_dynamic"
+  TCELL_RAW_COUNTS:      "{tcell}/data/raw_counts_gene_by_cell.tsv"
+  TCELL_BASE_GRN:        "{tcell_data}/grn_files/base_GRN.csv"
+  TCELL_LF_ETS1:         "{tcell_data}/latent_factors/ets1_lfs"
+  TCELL_LF_IKZF1:        "{tcell_data}/latent_factors/ikzf1_lfs"
+  TCELL_OBJECTS:         "{tcell_outs}/objects"
+  TCELL_STREAM_OBJS:     "{tcell_outs}/stream_objs"
+  TCELL_STREAM_TRAJ:     "{tcell_outs}/stream_objs/rbpj_ntc/rbpj_ntc_v2.pkl"
+  TCELL_RNA_IMPUTED:     "{tcell_outs}/stream_objs/rbpj_rna_imputed_v2.h5ad"
+  TCELL_DICTYS_ALL_DATA: "{tcell_outs}/dictys/rbpj_ets1_ikzf1_ntc/data"
+  TCELL_ROOT:            "{tcell_root}"
+
+  # --- Male donor, pre-dictys (DEAD root) -----------------------------------
+  # trajectory/traj_stream_male_donor, trajectory/imputation_male_donor,
+  # dynamic_grn/data_prep_and_checks
+  MALE_STREAM_INPUT:     "{donor1}/other_files/objects/stream_input_filtered_cells_v7.h5ad"
+  MALE_OBJECTS:          "{donor1}/other_files/objects"
+  MALE_SLIDE_BARCODES:   "{donor1}/other_files/SLIDE_cell_barcodes"
+  MALE_STREAM_OUTS:      "{donor1}/stream_outs"
+  MALE_STREAM_FIGURES:   "{donor1}/stream_outs/figures"
+  MALE_CELLRANGER_H5AD:  "{donor1}/cell_ranger_outs/adata_aggregated_gene.leiden.h5ad"
+  MALE_FEATURE_MATRIX:   "{donor1}/outs/filtered_feature_bc_matrix"
+  MALE_SORTING_ATAC:     "{donor1}/sorting_atac_outs"
+  MALE_COMB_CONTROL:     "{donor1}/other_files/combinatorial_control"
+  MALE_GENE_MASK:        "{donor1}/other_files/combinatorial_control/genes.txt"
+  MALE_CO_TFS:           "{donor1}/other_files/combinatorial_control/CO_TFs.txt"
+  MALE_BASE:             "{donor1}"
+  MALE_SC_PROCESSED:     "{igvf_male}/male_sc_processed.h5ad"
+  MALE_AGGR_OUTS:        "{donor1}/outs"
+  DONOR1_DAY0_2:         "{donor1_d02}"
+  DONOR1_DAY3_4:         "{donor1_d34}"
+  DONOR1_DAY5_6:         "{donor1_d56}"
+
+  # --- Female donor (DEAD root) ---------------------------------------------
+  # trajectory/traj_stream_female_donor, trajectory/imputation_female_donor
+  FEMALE_SC_PROCESSED:   "{donor2}/anndata/female_sc_processed.h5ad"
+  FEMALE_STREAM_INPUT:   "{donor2}/h5ad_objects/stream_input_filtered_cells.h5ad"
+  FEMALE_RNA_IMPUTED:    "{donor2}/multiome_rna_imputed.h5ad"
+  FEMALE_STREAM_OUTS:    "{donor2}/stream_outs"
+  FEMALE_STREAM_NO_PCA:  "{donor2}/stream_outs/no_rerun_pca"
+  FEMALE_STREAM_TRAJ:    "{donor2}/stream_outs/stream_traj_no_pca.pkl"
+  FEMALE_DICTYS_DATA:    "{donor2}/dictys_outs/data"
+  FEMALE_BASE:           "{donor2}"
+
+  # --- MultiVelo / velocyto (DEAD root) -------------------------------------
+  # trajectory/b_cell_velocity
+  VELOCITY_BASE:         "{velocity}"
+  VELOCITY_RELATED:      "{velocity}/velocity_related"
+  MULTIVELO_RESULT:      "{velocity}/multivelo_results/multivelo_result.h5ad"
+  VELOCITY_RNA_H5AD:     "{velocity_in}/bcell_rna.h5ad"
+  VELOCITY_ATAC_H5AD:    "{velocity_in}/bcell_atac.h5ad"
+  VELOCITY_STREAM_OBS:   "{velocity_in}/adata_stream_obs.tsv.gz"
+  VELOCITY_STREAM_TRAJ:  "{velocity_in}/stream_outs/stream_traj_v6.pkl"
+  VELOCITY_TMP:          "{velocity_in}/tmp"
+  VELOCITY_IN_BASE:      "{velocity_in}"
+
+  # --- Motif databases (DEAD root) ------------------------------------------
+  # dynamic_grn/data_prep_and_checks
+  MOTIF_DIR:             "{motifs}"
+  MOTIF_CISBP_MEME:      "{motifs}/CisBP_Human_FigR_meme"
+  MOTIF_JASPAR:          "{motifs}/JASPAR2020_vertebrates.motif"
+  MOTIF_HOCOMOCO:        "{motifs}/hocomoco_human.motif"
+
 
 groups:
   # State-discriminative latent factors, per branch
@@ -46,7 +212,7 @@ groups:
     template: "{inputs}/prdm1_ko/gc_98/enrichment_episode_{i}.csv"
     n_episodes: 8
 
-  # TF knockouts (T cell)
+  # TF knockouts (T cell) -- DEAD root
   ETS1_SIG:
     template: "{tcell}/output/ets1/sig_LFs/enrichment_episode_{i}.csv"
     n_episodes: 6
