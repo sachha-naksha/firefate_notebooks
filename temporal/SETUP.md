@@ -56,6 +56,37 @@ Every dataset location for these notebooks lives in `temporal/datasets.yaml`. Ed
 file — never the notebooks, and never `src/firefate/`, which is why the paths were
 moved out of the package in the first place.
 
+Every notebook now opens with a loader cell that reads it:
+
+```python
+from firefate.io import DatasetPaths
+
+config = DatasetPaths.from_yaml("../datasets.yaml")
+```
+
+and every dataset path below that cell is a `config.NAME` lookup rather than a string
+literal. Nothing else in a notebook needs editing to move it to new data.
+
+### Live and dead roots
+
+`roots:` is split into two blocks. The **LIVE** roots were verified to exist on this
+cluster, so the B-cell notebooks run against them unchanged:
+
+| root | holds |
+|---|---|
+| `bcell` | the dictys run — `{bcell}/data`, `{bcell}/outs`, `{bcell}/latent_factors` |
+| `tmp_dyn` | the per-window `Subset1..SubsetN` directories |
+| `figures` | where figures for the paper are written |
+
+The **DEAD** roots (`tcell`, `donor1`, `donor2`, `velocity`, `motifs`, …) are the PSC
+`/ocean/...` and `bgdb` paths the notebooks were originally run against. No copy of
+them resolves here. They are kept verbatim as a provenance record — repoint the root
+and everything below it follows, because every scalar is written relative to one.
+
+To see where you stand before running anything, use the check at the end of this
+section: on an untouched checkout it reports the live scalars present and every dead
+one missing, which is expected, not a fault.
+
 ### The three sections
 
 ```yaml
@@ -131,13 +162,37 @@ echo "datasets.local.yaml" >> ../.gitignore
 and load `"../datasets.local.yaml"`. Only commit a change to `datasets.yaml` itself
 when the canonical location of a dataset actually moves.
 
-## 3. Known gap — the notebooks are not fully migrated yet
+## 3. Paths and imports are both migrated
 
-The committed notebooks still open with `config = Config()` and stale imports
-(`firefate.core.pseudotime_curves`, `firefate.enrichment`, `firefate.utils.plots`) from
-the layout that preceded the `temporal` / `state_specific` / `cross_prediction` split.
-Steps 1 and 2 are what make the replacement cells work, but they do not rewrite the
-cells for you. `../NOTEBOOK_MIGRATION.md` gives the OLD → NEW block for each notebook;
-in short, `from firefate.temporal import *` now covers the classes and their figures,
-and `Config()` becomes `DatasetPaths.from_yaml(...)`. Paste the new cell, restart the
-kernel, re-run.
+Nothing here is outstanding. `Config()` and the `sys.path` shim that pointed at the
+deleted `py_scripts/` tree are gone, replaced by the loader cell above, and the
+pre-split module imports (`utils_custom`, `pseudotime_curves`, `episodic_dynamics`,
+`state_dynamics`, `episode_plots`, `firefate.core.*`, `firefate.enrichment`,
+`firefate.utils.plots`) have been rewritten onto the `temporal` / `state_specific` /
+`io` / `backends.dictys` layout. `../NOTEBOOK_MIGRATION.md` remains the record of what
+moved where; `apply_imports.py` is the tool that applied it.
+
+Because the new packages define `__all__`, a star import no longer leaks the module's
+own imports into the notebook. Where a notebook depended on that, the name is now
+imported explicitly — `pickle`, `matplotlib` and `dictys.net.stat` in
+`LF_global_dynamics`, and `calculate_tf_episodic_enrichment` (which lives in
+`firefate.base`, not `firefate.temporal`) in `LF_local_dynamics`.
+
+Two renames that `NOTEBOOK_MIGRATION.md` does not mention were applied as well:
+`SmoothedCurves` → `SmoothedCurvesGRN` and `run_episode` → `run_episodic_enrichment`.
+Both were matched on identical parameter lists, not on name similarity.
+
+### One thing still missing
+
+`dynamic_validation.ipynb` calls `bp_pb.plot_box(category_tfs, ...)` and
+`bp_gc.plot_box(category_tfs, ...)`, but `category_tfs` is never defined — it is a
+notebook variable whose defining cell is gone, not a name any import supplies (it
+appears in the package only as a parameter of `BindingPhases.plot_box`). It maps each
+category name to its TF universe. Define it before running those two cells.
+
+A few paths are deliberately still literals, because they are scratch rather than
+data: `/dev/shm` staging in the trajectory notebooks, the `.cache/*.pkl` pickles in
+`b_cell_velocity`, and the STREAM tutorial `tut_files/skin` directory in
+`traj_stream_female_donor`. `%%bash` cells are also untouched — a shell cell cannot
+read `config`, so the SLURM and `dictys_helper` blocks still carry absolute paths and
+must be edited by hand.

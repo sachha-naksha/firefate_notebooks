@@ -36,11 +36,14 @@ re-run one you need:
    cd FIREFate && pip install -e .
    ```
 2. Dataset paths pointed at your own copies. Every path lives in
-   `temporal/datasets.yaml` — edit that file, not the notebooks:
+   `temporal/datasets.yaml` — edit that file, not the notebooks. Each temporal
+   notebook already opens with the loader cell that reads it:
    ```python
    from firefate.io import DatasetPaths
-   config = DatasetPaths.from_yaml("datasets.yaml")
+   config = DatasetPaths.from_yaml("../datasets.yaml")
    ```
+   `temporal/SETUP.md` explains which roots are live on this cluster and which are
+   dead PSC paths you have to repoint first.
 3. `dictys` (and, for the trajectory notebooks, `stream` / `palantir` / `scvelo` /
    `multivelo`), which are not declared dependencies of `firefate`.
 
@@ -53,6 +56,24 @@ Sphinx needs one top-level heading per notebook to give the page a title and a s
 link. `add_titles.py` prepends a `# Title` cell to any notebook missing one — run
 `python add_titles.py` for a dry run, `--apply` to write. It is idempotent, so run it
 again after adding a notebook.
+
+## Migration tools
+
+`temporal/apply_paths.py` is the one-shot tool that rewrote the hardcoded dataset paths
+in the temporal notebooks into `config.NAME` lookups against `temporal/datasets.yaml`.
+It is idempotent and dry-run by default (`--apply` to write), so re-running it after
+adding a notebook picks up only the new literals. It never touches cell outputs,
+`%%bash` cells, or scratch paths (`/dev/shm`, `.cache`). **Close the notebooks in
+Jupyter before running it with `--apply`** — an open kernel will overwrite the change
+on its next autosave.
+
+`temporal/apply_imports.py` is its counterpart for imports: it applied
+`NOTEBOOK_MIGRATION.md` to the temporal notebooks, moving them off the pre-split
+modules (`utils_custom`, `pseudotime_curves`, `firefate.core.*`, …) and onto
+`firefate.temporal` / `state_specific` / `io` / `backends.dictys`. Same contract —
+idempotent, dry-run by default, matches on cell content rather than index, and leaves
+outputs untouched. Its docstring records the three places it deliberately departs from
+the doc.
 
 ## Contributing
 
