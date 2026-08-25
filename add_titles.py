@@ -58,13 +58,13 @@ TITLES = {
     "temporal/dynamic_grn/data_prep_and_checks.ipynb": "Preparing and checking dictys inputs",
     "temporal/dynamic_grn/dynamic_grn_b_cell.ipynb": "B-cell dynamic GRN reconstruction",
     "temporal/dynamic_grn/t_cell_dictys_data.ipynb": "T-cell dictys inputs",
-    "temporal/analysis/LF_global_dynamics.ipynb": "Global regulation of a latent factor",
-    "temporal/analysis/LF_local_dynamics.ipynb": "Episodic regulation of a latent factor",
-    "temporal/analysis/episodic_enrichment.ipynb": "Episodic TF enrichment",
-    "temporal/analysis/phase_clustered_links.ipynb": "Clustering links into regulatory phases",
-    "temporal/analysis/chromatin_dynamics.ipynb": "TF binding dynamics from chromatin",
-    "temporal/analysis/dynamic_validation.ipynb": "Validation — enriched vs random TF force",
-    "temporal/analysis/t_cell_analysis.ipynb": "T-cell episodic analysis",
+    "temporal/analysis/Fig4_1_LF_global_dynamics.ipynb": "Global regulation of a latent factor",
+    "temporal/analysis/Fig3_1_LF_local_dynamics.ipynb": "Episodic regulation of a latent factor",
+    "temporal/analysis/Fig3_2_episodic_enrichment.ipynb": "Episodic TF enrichment",
+    "temporal/analysis/Fig4_3_phase_clustered_links.ipynb": "Clustering links into regulatory phases",
+    "temporal/analysis/Ext_chromatin_dynamics.ipynb": "TF binding dynamics from chromatin",
+    "temporal/analysis/Fig4_2_dynamic_validation.ipynb": "Validation — enriched vs random TF force",
+    "temporal/analysis/Ext_tpex_ex_forces.ipynb": "Tpex/Tex TF forces",
 }
 
 ROOT = Path(__file__).resolve().parent

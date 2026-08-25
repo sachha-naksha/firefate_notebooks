@@ -44,8 +44,8 @@ def add(nb: str, old: str, new: str, every: bool = False) -> None:
 
 
 # --- the four analysis notebooks that share an import cell -------------------
-for _nb in ("chromatin_dynamics", "dynamic_validation",
-            "episodic_enrichment", "phase_clustered_links"):
+for _nb in ("Ext_chromatin_dynamics", "Fig4_2_dynamic_validation",
+            "Fig3_2_episodic_enrichment", "Fig4_3_phase_clustered_links"):
     add(f"analysis/{_nb}.ipynb", """
 import dictys
 from utils_custom import *
@@ -59,7 +59,7 @@ from firefate.utils import *         # gene / state helpers (was utils_custom)
 """)
 
 # --- LF_global_dynamics ------------------------------------------------------
-add("analysis/LF_global_dynamics.ipynb", """
+add("analysis/Fig4_1_LF_global_dynamics.ipynb", """
 from utils_custom import *
 from pseudotime_curves import *
 from episode_plots import *
@@ -74,12 +74,12 @@ from firefate.temporal import *      # classes AND their figures (was episode_pl
 from firefate.utils import *         # gene / state helpers (was utils_custom)
 """)
 
-add("analysis/LF_global_dynamics.ipynb",
+add("analysis/Fig4_1_LF_global_dynamics.ipynb",
     "from pseudotime_curves import *",
     "from firefate.temporal import *")
 
 # --- LF_local_dynamics -------------------------------------------------------
-add("analysis/LF_local_dynamics.ipynb", """
+add("analysis/Fig3_1_LF_local_dynamics.ipynb", """
 from utils_custom import *
 from episodic_dynamics import *
 from pseudotime_curves import *
@@ -90,7 +90,7 @@ from firefate.utils import *
 """)
 
 # --- t_cell_analysis ---------------------------------------------------------
-add("analysis/t_cell_analysis.ipynb", """
+add("analysis/Ext_tpex_ex_forces.ipynb", """
 from utils_custom import *
 from pseudotime_curves import *
 from episodic_dynamics import *
@@ -100,7 +100,7 @@ from firefate.utils import *
 """)
 
 # --- chromatin_dynamics: reload cell ----------------------------------------
-add("analysis/chromatin_dynamics.ipynb", """
+add("analysis/Ext_chromatin_dynamics.ipynb", """
 import importlib
 import firefate.utils.plots, episode_plots
 importlib.reload(firefate.utils.plots)   # picks up the new functions
@@ -116,7 +116,7 @@ from firefate.temporal import *          # re-bind names into the notebook names
 """)
 
 # --- dynamic_validation ------------------------------------------------------
-add("analysis/dynamic_validation.ipynb", """
+add("analysis/Fig4_2_dynamic_validation.ipynb", """
 import importlib
 import firefate.utils.plots, firefate.utils.custom
 import state_dynamics
@@ -139,7 +139,7 @@ for _m in (firefate.utils, firefate.temporal._waves, firefate.temporal._states,
 from firefate.temporal import TFForceWaves, StateFrequency, BindingPhases, TFForceValidation
 """)
 
-add("analysis/dynamic_validation.ipynb", """
+add("analysis/Fig4_2_dynamic_validation.ipynb", """
 import importlib, dynamic_validation
 importlib.reload(dynamic_validation)
 from dynamic_validation import TFForceValidation
@@ -149,11 +149,11 @@ importlib.reload(firefate.temporal._validation)
 from firefate.temporal._validation import TFForceValidation
 """)
 
-add("analysis/dynamic_validation.ipynb",
+add("analysis/Fig4_2_dynamic_validation.ipynb",
     "from firefate.core.pseudotime_curves import SmoothedCurvesChromatin",
     "from firefate.temporal import SmoothedCurvesChromatin")
 
-add("analysis/dynamic_validation.ipynb", """
+add("analysis/Fig4_2_dynamic_validation.ipynb", """
 import importlib, state_dynamics
 importlib.reload(state_dynamics)
 from state_dynamics import BindingPhases
@@ -164,7 +164,7 @@ from firefate.temporal._phases import BindingPhases
 """)
 
 # --- episodic_enrichment -----------------------------------------------------
-add("analysis/episodic_enrichment.ipynb", """
+add("analysis/Fig3_2_episodic_enrichment.ipynb", """
 import importlib
 from firefate.utils import plots
 importlib.reload(plots)
@@ -177,21 +177,21 @@ importlib.reload(firefate.temporal)
 from firefate.temporal import *          # re-bind names into the notebook namespace
 """)
 
-add("analysis/episodic_enrichment.ipynb",
+add("analysis/Fig3_2_episodic_enrichment.ipynb",
     "from firefate.enrichment import build_tf_color_bar_table, load_lf_gene_colors",
     "from firefate.io import load_lf_gene_colors\n"
     "from firefate.state_specific import build_tf_color_bar_table, plot_tf_enrichment_bars")
 
 # the LF colour-bar figures moved with their subject; call them unqualified now
-add("analysis/episodic_enrichment.ipynb",
+add("analysis/Fig3_2_episodic_enrichment.ipynb",
     "plots.plot_tf_episodic_enrichment_dotplot(",
     "plot_tf_episodic_enrichment_dotplot(")
-add("analysis/episodic_enrichment.ipynb",
+add("analysis/Fig3_2_episodic_enrichment.ipynb",
     "fig, _ = plots.plot_tf_enrichment_bars(",
     "fig, _ = plot_tf_enrichment_bars(")
 
 # --- phase_clustered_links ---------------------------------------------------
-add("analysis/phase_clustered_links.ipynb", """
+add("analysis/Fig4_3_phase_clustered_links.ipynb", """
 import importlib
 import firefate.utils.plots, firefate.utils.custom
 import state_dynamics
@@ -209,7 +209,7 @@ for _m in (firefate.utils, firefate.temporal._waves,
 
 # NOT `firefate.temporal._phases as sd`: this notebook also calls sd.StateFrequency
 # (_states) and sd.TFForceWaves (_waves), which _phases does not re-export.
-add("analysis/phase_clustered_links.ipynb",
+add("analysis/Fig4_3_phase_clustered_links.ipynb",
     "import state_dynamics as sd",
     "import firefate.temporal as sd")
 
@@ -218,13 +218,13 @@ add("analysis/phase_clustered_links.ipynb",
 # The GRN one takes the identical constructor signature these call sites use
 # (dictys_dynamic_object, trajectory_range, num_points, dist, sparsity, mode)
 # and still exposes .get_smoothed_curves().
-for _nb in ("LF_global_dynamics", "t_cell_analysis"):
+for _nb in ("Fig4_1_LF_global_dynamics", "Ext_tpex_ex_forces"):
     add(f"analysis/{_nb}.ipynb", "SmoothedCurves(", "SmoothedCurvesGRN(", every=True)
 
 # `run_episode` -> `run_episodic_enrichment`: same parameter list, including the
 # `lf_genes` and `percentile` this call site passes (run_episodic_construction
 # takes neither).
-add("analysis/t_cell_analysis.ipynb", "run_episode(", "run_episodic_enrichment(", every=True)
+add("analysis/Ext_tpex_ex_forces.ipynb", "run_episode(", "run_episodic_enrichment(", every=True)
 
 # --- dynamic_grn_b_cell ------------------------------------------------------
 # `qc_reads` is the only name this notebook used from the old utils.py.
