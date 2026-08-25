@@ -54,11 +54,17 @@ re-run one you need:
    ```
    `temporal/SETUP.md` explains which roots are live on this cluster and which are
    dead PSC paths you have to repoint first.
-4. For the trajectory notebooks only, `stream` / `palantir` / `scvelo` / `multivelo`.
-   These are **not** in `environment.yml` and should not be added to it: `dictys`
-   holds `anndata` at 0.6.22.post1, which is far older than those packages (and than
-   current `scanpy`, also absent here) expect. Build a separate environment for the
-   trajectory step and carry its output forward as files.
+4. Separate environments for the other two groups. `fftemporal` covers the
+   dictys-based dynamic GRN work — `temporal/dynamic_grn/` and `temporal/analysis/` —
+   and nothing else. `temporal/trajectory/` needs `stream` / `palantir` / `scvelo` /
+   `multivelo`; `state_specific/` needs `scanpy` and `celloracle`. None of those are
+   in `environment.yml`. Build them separately and carry results across as files.
+
+   One wrinkle if you go looking: `anndata` 0.6.22.post1 ships in the environment but
+   does not import, because it predates the pinned pandas 2.2.2 (`pandas.core.index`
+   was removed). Nothing in the environment depends on it and `dictys` never imports
+   it, so the dynamic GRN path is unaffected — but any notebook doing `import anndata`
+   belongs in one of the environments above, not this one.
 
 ### Regenerating environment.yml
 
