@@ -25,7 +25,7 @@ other package. From a terminal:
 ```bash
 source /sw/rh9.4/python/miniforge3/etc/profile.d/conda.sh
 conda activate dictys
-cd /projects/bhdw/asachan/methods/FIREFate
+cd /projects/bhdw/asachan/methods/firefate_codebases/FIREFate
 pip install -e .
 ```
 
@@ -35,7 +35,7 @@ running kernel afterwards.
 > If you would rather not install, put this at the top of cell 1 instead — but the
 > install is the supported path, and the `.sbatch` scripts now need it too:
 > ```python
-> import sys; sys.path.insert(0, "/projects/bhdw/asachan/methods/FIREFate/src")
+> import sys; sys.path.insert(0, "/projects/bhdw/asachan/methods/firefate_codebases/FIREFate/src")
 > ```
 
 ---
@@ -150,9 +150,7 @@ from firefate.utils import *         # gene / state helpers (was utils_custom)
 from firefate.io import DatasetPaths
 
 # Keeps the name `config`, so every downstream config.OUTPUT_FOLDER / config.PB works.
-config = DatasetPaths.from_yaml(
-    '/projects/bhdw/asachan/methods/FIREFate/multiome_dynamic_regulation/py_scripts/datasets.yaml'
-)
+config = DatasetPaths.from_yaml("../datasets.yaml")
 ```
 
 ### `chromatin_dynamics.ipynb` — cell 2
@@ -338,9 +336,7 @@ from firefate.temporal import *
 from firefate.utils import *
 from firefate.io import DatasetPaths
 
-config = DatasetPaths.from_yaml(
-    '/projects/bhdw/asachan/methods/FIREFate/multiome_dynamic_regulation/py_scripts/datasets.yaml'
-)
+config = DatasetPaths.from_yaml("../datasets.yaml")
 ```
 
 **OLD — cell 45**
