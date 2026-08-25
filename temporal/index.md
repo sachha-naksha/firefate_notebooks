@@ -8,6 +8,17 @@ networks.
 Titles are given explicitly here because these notebooks open on a code cell rather
 than a heading.
 
+## Setup
+
+Installing the `firefate` backend and pointing `datasets.yaml` at your own data, once
+per machine.
+
+```{toctree}
+:maxdepth: 1
+
+Setup <SETUP>
+```
+
 ## Trajectory inference
 
 Pseudotime and RNA velocity for the B-cell and T-cell systems, per donor.
