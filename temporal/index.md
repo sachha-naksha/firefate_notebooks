@@ -62,6 +62,7 @@ phases, chromatin dynamics, and the enriched-vs-random validation.
 Global regulation of a latent factor <analysis/Fig4_1_LF_global_dynamics>
 Episodic regulation of a latent factor <analysis/Fig3_1_LF_local_dynamics>
 Episodic TF enrichment <analysis/Fig3_2_episodic_enrichment>
+Episodic TF enrichment — knockout programs <analysis/Fig5_episodic_enrichment>
 Clustering links into regulatory phases <analysis/Fig4_3_phase_clustered_links>
 TF binding dynamics from chromatin <analysis/Ext_chromatin_dynamics>
 Validation — enriched vs random TF force <analysis/Fig4_2_dynamic_validation>

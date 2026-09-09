@@ -38,7 +38,7 @@ roots:
   tmp_dyn:     /work/hdd/bhdw/asachan/dictys_related/tmp_dynamic
 
   inputs:      "{bcell_outs}/intermediate_tmp_files"
-  enrichment:  "{inputs}/direct_effect_enrichment"
+  enrichment:  "{inputs}/direct_effect_enrichment_fixed"
 
   # Where figures for the paper are written.
   figures:     /projects/bhdw/asachan/papers/firefate/figures
@@ -206,10 +206,10 @@ groups:
 
   # TF knockouts (B cell)
   IRF4:
-    template: "{inputs}/irf4_ko/gc_98/enrichment_episode_{i}.csv"
+    template: "{inputs}/irf4_ko/gc_98_fixed/enrichment_episode_{i}.csv"
     n_episodes: 8
   BLIMP1:
-    template: "{inputs}/prdm1_ko/gc_98/enrichment_episode_{i}.csv"
+    template: "{inputs}/prdm1_ko/gc_98_fixed/enrichment_episode_{i}.csv"
     n_episodes: 8
 
   # TF knockouts (T cell) -- DEAD root
