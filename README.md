@@ -50,8 +50,11 @@ re-run one you need:
    notebook already opens with the loader cell that reads it:
    ```python
    from firefate.io import DatasetPaths
-   config = DatasetPaths.from_yaml("../datasets.yaml")
+   config = DatasetPaths.find()
    ```
+   `find()` walks up from the kernel's working directory to the first
+   `datasets.yaml`, or takes the path in `$FIREFATE_DATASETS`, so it does not matter
+   where Jupyter was started.
    `temporal/SETUP.md` explains which roots are live on this cluster and which are
    dead PSC paths you have to repoint first.
 4. Separate environments for the other two groups. `fftemporal` covers the

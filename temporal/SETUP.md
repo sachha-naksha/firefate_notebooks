@@ -61,7 +61,7 @@ Every notebook now opens with a loader cell that reads it:
 ```python
 from firefate.io import DatasetPaths
 
-config = DatasetPaths.from_yaml("../datasets.yaml")
+config = DatasetPaths.find()
 ```
 
 and every dataset path below that cell is a `config.NAME` lookup rather than a string
@@ -113,14 +113,16 @@ groups:                                 # one path per episode
 
 ### Loading it
 
-`from_yaml` resolves relative paths against the kernel's working directory, which in
-Jupyter is the notebook's own directory. The notebooks sit one level below the config,
-so:
+`DatasetPaths.find()` walks up from the kernel's working directory to the first
+`datasets.yaml`, so it finds `temporal/datasets.yaml` from `analysis/`, `dynamic_grn/`
+or `trajectory/` regardless of where Jupyter was started; a kernel started outside the
+notebook tree sets `FIREFATE_DATASETS=/path/to/datasets.yaml` once instead.
+`DatasetPaths.from_yaml(path)` is the explicit form.
 
 ```python
 from firefate.io import DatasetPaths
 
-config = DatasetPaths.from_yaml("../datasets.yaml")   # from analysis/, dynamic_grn/, trajectory/
+config = DatasetPaths.find()  # or DatasetPaths.from_yaml("../datasets.yaml")
 config.OUTPUT_FOLDER          # scalar -> str
 config.PB["ep1"]              # group  -> path for episode 1
 config.load_enrichment("PB")  # the group's CSVs, in episode order, p_value < 0.05

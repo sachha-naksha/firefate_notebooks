@@ -2,7 +2,7 @@
 #
 # Read with:
 #     from firefate.io import DatasetPaths
-#     config = DatasetPaths.from_yaml("../datasets.yaml")   # from analysis/, dynamic_grn/, trajectory/
+#     config = DatasetPaths.find()   # walks up from the kernel cwd, or uses $FIREFATE_DATASETS
 #     config.DYNAMIC_H5        # a scalar
 #     config.PB["ep1"]         # a group, keyed ep1..epN
 #
