@@ -78,17 +78,6 @@ add("analysis/Fig4_1_LF_global_dynamics.ipynb",
     "from pseudotime_curves import *",
     "from firefate.temporal import *")
 
-# --- LF_local_dynamics -------------------------------------------------------
-add("analysis/Fig3_1_LF_local_dynamics.ipynb", """
-from utils_custom import *
-from episodic_dynamics import *
-from pseudotime_curves import *
-""", """
-from firefate.base import calculate_tf_episodic_enrichment
-from firefate.temporal import *
-from firefate.utils import *
-""")
-
 # --- t_cell_analysis ---------------------------------------------------------
 add("analysis/Ext_tpex_ex_forces.ipynb", """
 from utils_custom import *
