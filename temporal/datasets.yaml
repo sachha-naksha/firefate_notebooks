@@ -185,6 +185,7 @@ scalars:
   VELOCITY_STREAM_OBS:   "{velocity_in}/adata_stream_obs.tsv.gz"
   VELOCITY_STREAM_TRAJ:  "{velocity_in}/stream_outs/stream_traj_v6.pkl"
   VELOCITY_TMP:          "{velocity_in}/tmp"
+  VELOCITY_STREAM_OUTS:  "{velocity_in}/stream_outs"   # where traj_stream_male_donor writes branch/edge/dist
   VELOCITY_IN_BASE:      "{velocity_in}"
 
   # --- Motif databases (DEAD root) ------------------------------------------
