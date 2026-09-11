@@ -219,7 +219,12 @@ groups:
     template: "{enrichment}/enrichment_ep{i}_gc.csv"
     n_episodes: 4
 
-  # TF knockouts (B cell)
+  # TF knockouts (B cell): IRF4-KO (Z4) and BLIMP1-KO (Z5) programs against the GC
+  # branch (1, 3) at num_points = 40 -> 8 episodes of 5 points, 98th percentile.
+  # Regenerated 2026-09-11 with the fixed code by
+  # analysis/run_episodic_enrichment_bcell.py --programs ko (run metadata and the
+  # episodic GRNs in {inputs}/ko_gc_98_run); the pre-fix Oct 2025 tables sit in
+  # legacy_oct2025_prefix_bug/ next to them. Consumed by Fig5.
   IRF4:
     template: "{inputs}/irf4_ko/gc_98/enrichment_episode_{i}.csv"
     n_episodes: 8

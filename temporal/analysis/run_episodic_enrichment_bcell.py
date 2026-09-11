@@ -29,9 +29,19 @@ cluster whose GRN scale matched the published tables): PB = (1, 2), GC = (1, 3),
 num_points = 20, points_per_episode = 5 (4 episodes), dist = 0.001,
 sparsity = 0.01, percentile = 98, pval_threshold = 1e-3, network ``w``.
 
+``--programs ko`` (inputs to Fig5) enriches the IRF4-KO (Z4) and BLIMP1-KO (Z5)
+programs instead, against the GC branch (1, 3) sampled at num_points = 40 -> 8
+episodes of 5 points, writing ``config.IRF4['ep1'..'ep8']`` and
+``config.BLIMP1[...]`` (``enrichment_episode_{i}.csv``). The tables those groups
+pointed at before (Oct 2025) predate the ISSUE #1 / #3 fixes -- every episode after
+the first was scaled by episode-1 regulator expression, and most edges by another
+TF's expression -- so they are moved to ``legacy_oct2025_prefix_bug/`` next to the
+new ones. Run metadata and the 8 GC episodic GRNs go to ``{inputs}/ko_gc_98_run``.
+
 Usage (from any directory; datasets.yaml is found via DatasetPaths.find()):
 
-    python run_episodic_enrichment_bcell.py --n-processes 32
+    python run_episodic_enrichment_bcell.py --n-processes 32          # PB/GC, Fig3_2
+    python run_episodic_enrichment_bcell.py --programs ko --n-processes 32   # Fig5
 """
 from __future__ import annotations
 
@@ -72,8 +82,13 @@ def load_lf_genes(paths: list[str], drop_hla: bool) -> list[str]:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--datasets-yaml", default=str(HERE.parent / "datasets.yaml"))
-    p.add_argument("--branches", default="pb,gc")
-    p.add_argument("--num-points", type=int, default=20)
+    p.add_argument("--programs", choices=["gcpb", "ko"], default="gcpb",
+                   help="gcpb: Z11 u Z3 on PB and GC (Fig3_2); "
+                        "ko: IRF4-KO (Z4) and BLIMP1-KO (Z5) on GC at 40 points (Fig5)")
+    p.add_argument("--branches", default=None,
+                   help="comma-separated; default pb,gc (gcpb) or gc (ko)")
+    p.add_argument("--num-points", type=int, default=None,
+                   help="default 20 (gcpb) or 40 (ko)")
     p.add_argument("--points-per-episode", type=int, default=5)
     p.add_argument("--dist", type=float, default=0.001)
     p.add_argument("--sparsity", type=float, default=0.01)
@@ -87,35 +102,82 @@ def main(argv=None) -> int:
     p.add_argument("--no-z11-only", action="store_true",
                    help="skip the secondary Z11-only tables")
     args = p.parse_args(argv)
+    if args.branches is None:
+        args.branches = "pb,gc" if args.programs == "gcpb" else "gc"
+    if args.num_points is None:
+        args.num_points = 20 if args.programs == "gcpb" else 40
 
     from focalfire.io import DatasetPaths
     import dictys
     from focalfire.temporal._episodes import EpisodeDynamics
 
     config = DatasetPaths.from_yaml(args.datasets_yaml)
-    out_dir = Path(config.PB["ep1"]).parent          # .../direct_effect_enrichment
-    z11_dir = out_dir / "z11_only"
-    grn_dir = out_dir / "episodic_grn_edges"
-    for d in (out_dir, z11_dir, grn_dir):
-        d.mkdir(parents=True, exist_ok=True)
+    # programs: name -> (genes, destination dir, table file name for (episode, branch))
+    if args.programs == "gcpb":
+        out_dir = Path(config.PB["ep1"]).parent          # .../direct_effect_enrichment
+        z11_dir = out_dir / "z11_only"
+        for d in (out_dir, z11_dir):
+            d.mkdir(parents=True, exist_ok=True)
+        fname = lambda ep, branch: f"enrichment_ep{ep}_{branch}.csv"
 
-    # Cellular programs. Primary = Z11 u Z3 with HLA- dropped: the program behind the
-    # committed Fig3_2 outputs (and the June 2025 tables, see
-    # tests/episodic_fix_validation/README.md). Secondary = Z11 alone, for comparison.
-    log("Cellular program (primary): Z11 u Z3, HLA- dropped")
-    lf_union = load_lf_genes([config.LF_Z11_GC_PB, config.LF_Z3_GC_PB], drop_hla=True)
-    programs = {"z11_union_z3": (lf_union, out_dir)}
-    if not args.no_z11_only:
-        log("Cellular program (secondary): Z11 only")
-        lf_z11 = load_lf_genes([config.LF_Z11_GC_PB], drop_hla=True)
-        programs["z11_only"] = (lf_z11, z11_dir)
+        # Cellular programs. Primary = Z11 u Z3 with HLA- dropped: the program behind
+        # the committed Fig3_2 outputs (and the June 2025 tables, see
+        # tests/episodic_fix_validation/README.md). Secondary = Z11 alone, for comparison.
+        log("Cellular program (primary): Z11 u Z3, HLA- dropped")
+        lf_union = load_lf_genes([config.LF_Z11_GC_PB, config.LF_Z3_GC_PB], drop_hla=True)
+        programs = {"z11_union_z3": (lf_union, out_dir, fname)}
+        if not args.no_z11_only:
+            log("Cellular program (secondary): Z11 only")
+            lf_z11 = load_lf_genes([config.LF_Z11_GC_PB], drop_hla=True)
+            programs["z11_only"] = (lf_z11, z11_dir, fname)
+        lf_files = {"lf_z11_file": config.LF_Z11_GC_PB, "lf_z3_file": config.LF_Z3_GC_PB}
+    else:
+        if args.branches != "gc":
+            raise SystemExit("--programs ko enriches the GC branch only (config.IRF4 / "
+                             "config.BLIMP1 are single-branch groups); got "
+                             f"--branches {args.branches}")
+        irf4_dir = Path(config.IRF4["ep1"]).parent       # .../irf4_ko/gc_98
+        blimp1_dir = Path(config.BLIMP1["ep1"]).parent   # .../prdm1_ko/gc_98
+        out_dir = irf4_dir.parents[1] / "ko_gc_98_run"   # .../intermediate_tmp_files/ko_gc_98_run
+        for d in (out_dir, irf4_dir, blimp1_dir):
+            d.mkdir(parents=True, exist_ok=True)
+        fname = lambda ep, branch: f"enrichment_episode_{ep}.csv"
+        if len(config.IRF4) != len(config.BLIMP1):
+            raise SystemExit("config.IRF4 and config.BLIMP1 declare different n_episodes")
+        if args.num_points // args.points_per_episode != len(config.IRF4):
+            raise SystemExit(
+                f"num_points={args.num_points} / points_per_episode="
+                f"{args.points_per_episode} gives {args.num_points // args.points_per_episode} "
+                f"episodes but datasets.yaml declares n_episodes: {len(config.IRF4)}")
+
+        log("Cellular program: IRF4 KO (Z4), HLA- dropped")
+        lf_irf4 = load_lf_genes([config.LF_Z4_IRF4_KO], drop_hla=True)
+        log("Cellular program: BLIMP1 KO (Z5), HLA- dropped")
+        lf_blimp1 = load_lf_genes([config.LF_Z5_PRDM1_KO], drop_hla=True)
+        programs = {"irf4_ko": (lf_irf4, irf4_dir, fname),
+                    "prdm1_ko": (lf_blimp1, blimp1_dir, fname)}
+        lf_files = {"lf_z4_irf4_ko_file": config.LF_Z4_IRF4_KO,
+                    "lf_z5_prdm1_ko_file": config.LF_Z5_PRDM1_KO}
+
+        # Keep the pre-fix (Oct 2025) tables for provenance, out of the group's way.
+        for name, (_, dest, _) in programs.items():
+            legacy = dest / "legacy_oct2025_prefix_bug"
+            old = sorted(dest.glob("enrichment_episode_*.csv"))
+            if old and not legacy.exists():
+                legacy.mkdir()
+                for f in old:
+                    f.rename(legacy / f.name)
+                log(f"{name}: moved {len(old)} pre-fix tables to {legacy}")
+
+    grn_dir = out_dir / "episodic_grn_edges"
+    grn_dir.mkdir(parents=True, exist_ok=True)
 
     run_config = {
         **vars(args),
         "dynamic_h5": config.DYNAMIC_H5,
-        "lf_z11_file": config.LF_Z11_GC_PB,
-        "lf_z3_file": config.LF_Z3_GC_PB,
+        **lf_files,
         "n_genes": {k: len(v[0]) for k, v in programs.items()},
+        "destinations": {k: str(v[1]) for k, v in programs.items()},
         "branches_ranges": BRANCHES,
         "started": datetime.now().isoformat(timespec="seconds"),
         "host": os.uname().nodename,
@@ -128,7 +190,7 @@ def main(argv=None) -> int:
     log(f"network loaded in {time.time() - t0:.0f}s: "
         f"{len(net.nids[0])} TFs, {len(net.ndict)} genes")
 
-    for name, (genes, _) in programs.items():
+    for name, (genes, _, _) in programs.items():
         present = [g for g in genes if g in net.ndict]
         missing = sorted(set(genes) - set(present))
         log(f"program {name}: {len(present)}/{len(genes)} genes in the network"
@@ -191,11 +253,11 @@ def main(argv=None) -> int:
                 "n_tfs_in_grn": int(edges.index.get_level_values(0).nunique()),
                 "N_targets_in_grn": int(edges.index.get_level_values(1).nunique()),
             }
-            for name, (genes, dest) in programs.items():
+            for name, (genes, dest, table_name) in programs.items():
                 epi.set_lf_genes(genes)
                 epi.annotate_lf_in_grn()
                 enr = epi.calculate_enrichment()
-                out_path = dest / f"enrichment_ep{ep}_{branch}.csv"
+                out_path = dest / table_name(ep, branch)
                 enr.to_csv(out_path, index=False)
                 mask = epi.episodic_grn_edges["is_in_lf"]
                 k_active = int(epi.episodic_grn_edges[mask].index.get_level_values(1).nunique())
