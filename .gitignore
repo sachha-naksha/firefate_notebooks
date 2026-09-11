@@ -7,4 +7,5 @@ __pycache__/
 
 # Notebook figure outputs
 temporal/analysis/Fig4_2_results/
+temporal/analysis/Fig4_4_results/
 temporal/analysis/Fig5_results/
