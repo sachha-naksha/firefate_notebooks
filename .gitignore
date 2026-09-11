@@ -4,3 +4,6 @@ __pycache__/
 **/.ipynb_checkpoints/
 *.pyc
 .DS_Store
+
+# Notebook figure outputs
+temporal/analysis/Fig4_2_results/
