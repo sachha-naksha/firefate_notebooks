@@ -10,9 +10,11 @@
 # package stays installable anywhere. Edit them, don't edit the notebooks.
 #
 # Roots are grouped LIVE / DEAD below. The LIVE ones were verified to exist on the
-# current cluster; the DEAD ones are the PSC (/ocean) and bgdb paths the notebooks
-# were originally run against, kept verbatim as a provenance record. Repoint a dead
-# root before running the notebooks that use it -- everything below it then follows.
+# current cluster -- PSC (/ocean/projects/cis240075p), where this session is running.
+# The DEAD ones are the bhdw/bgdb cluster paths the notebooks were most recently run
+# against (a different, non-PSC cluster); none of them resolve from here. Repoint a
+# dead root before running the notebooks that use it -- everything below it then
+# follows.
 #
 # Two caveats on the substitution:
 #   * every "{name}" in `scalars` and in a group `template` is filled from `roots`,
@@ -24,29 +26,27 @@
 roots:
 
   # ---------------------------------------------------------------- LIVE ----
-  # Verified present on this cluster.
+  # Verified present on this cluster (PSC).
 
   # B-cell dictys run (the "actb1_added_v2" run on PSC). {bcell}/data and
-  # {bcell}/outs mirror the old .../actb1_added_v2/{data,output}.
-  bcell:       /work/nvme/bhdw/asachan/data_files/firefate/bcell
+  # {bcell}/output hold the dictys inputs/outputs; {bcell}/tmp_dynamic the
+  # per-window Subset1..SubsetN directories.
+  bcell:       /ocean/projects/cis240075p/asachan/datasets/B_Cell/multiome_1st_donor_UPMC_aggr/dictys_outs/actb1_added_v2
   bcell_data:  "{bcell}/data"
-  bcell_outs:  "{bcell}/outs"
-  bcell_lf:    "{bcell}/latent_factors"
-
-  # Per-window dictys working directories (Subset1..SubsetN). NOT under {bcell} --
-  # the notebooks that said "{bcell}/tmp_dynamic" were pointing at nothing.
-  tmp_dyn:     /work/hdd/bhdw/asachan/dictys_related/tmp_dynamic
+  bcell_outs:  "{bcell}/output"
+  tmp_dyn:     "{bcell}/tmp_dynamic"
+  # SLIDE latent factors (feature_list_Z*.txt, z_matrix_*.csv). On PSC they live
+  # under the male donor's other_files/, not under the dictys run.
+  bcell_lf:    "{donor1}/other_files/latent_factors"
 
   inputs:      "{bcell_outs}/intermediate_tmp_files"
-  enrichment:  "{inputs}/direct_effect_enrichment_fixed"
+  enrichment:  "{inputs}/direct_effect_enrichment"
 
   # Where figures for the paper are written.
-  figures:     /projects/bhdw/asachan/papers/firefate/figures
-  scratch:     /projects/bhdw/asachan/tmp
-
-  # ---------------------------------------------------------------- DEAD ----
-  # No copy of these resolves on the current cluster. Repoint before running the
-  # T-cell, second-donor, velocity or raw-cellranger notebooks.
+  figures:     "{bcell_outs}/figures"
+  # Intermediate results handed off between notebooks (e.g. SS_LINKS_CSV below).
+  # Reuses {inputs} since nothing PSC-specific has been carved out for it yet.
+  scratch:     "{inputs}"
 
   # T-cell (RBPJ / ETS1 / IKZF1 knockouts)
   tcell:       /ocean/projects/cis240075p/asachan/datasets/B_Cell/T_cell/outs/dictys/rbpj_ntc
@@ -67,12 +67,23 @@ roots:
   # IGVF single-cell preprocessing output (produced by a collaborator, not by us)
   igvf_male:   /ocean/projects/cis240075p/skeshari/igvf/bcell1/male_donor/out_data/sc_preproc/out_files
 
-  # MultiVelo / velocyto inputs and outputs
-  velocity:    /work/hdd/bgdb/asachan/datasets/B_cell_dictys_actb1_added_v2
-  velocity_in: /projects/bgdb/asachan/datasets/Bcell_in_vitro_human
-
   # TF motif databases
   motifs:      /ocean/projects/cis240075p/asachan/datasets/TF_motif_files
+
+  # ---------------------------------------------------------------- DEAD ----
+  # The bhdw/bgdb cluster's paths (a different, non-PSC cluster) the notebooks
+  # were most recently run against. No copy of these resolves on PSC. Kept
+  # verbatim as a provenance record -- to run against that cluster instead,
+  # repoint the LIVE roots above back to these values.
+
+  bhdw_bcell:     /work/nvme/bhdw/asachan/data_files/firefate/bcell
+  bhdw_tmp_dyn:   /work/hdd/bhdw/asachan/dictys_related/tmp_dynamic
+  bhdw_figures:   /projects/bhdw/asachan/papers/firefate/figures
+  bhdw_scratch:   /projects/bhdw/asachan/tmp
+
+  # MultiVelo / velocyto inputs and outputs (bgdb cluster)
+  velocity:    /work/hdd/bgdb/asachan/datasets/B_cell_dictys_actb1_added_v2
+  velocity_in: /projects/bgdb/asachan/datasets/Bcell_in_vitro_human
 
 
 scalars:
@@ -106,7 +117,7 @@ scalars:
   TRAJ_NODE:             "{bcell_data}/traj_node.h5"
   TRAJ_CELL_RNA:         "{bcell_data}/traj_cell_rna.h5"
 
-  # --- Latent factors (SLIDE) -----------------------------------------------
+  # --- Latent factors (SLIDE) -------------------------------------------------
   # analysis/LF_*, analysis/episodic_enrichment, trajectory/traj_stream_male_donor
   LF_FOLDER:             "{bcell_lf}"
   LF_Z11_GC_PB:          "{bcell_lf}/feature_list_Z11_GC_PB.txt"
@@ -120,12 +131,12 @@ scalars:
   EPISODIC_LINKS_CSV:    "{figures}/enriched_tf_lf_targets_per_episode.csv"
   ES_BAR_DIR:            "{figures}/z11_episodic_enrichment"
   FIGURES_SUPPL:         "{figures}"
-  SS_LINKS_CSV:          "{scratch}/ss_firefate_links_2B.csv"
+  SS_LINKS_CSV:          /ocean/projects/cis240075p/asachan/datasets/B_Cell/ss_firefate_links_2B.csv
   ENRICHED_LINKS_PB:     "{inputs}/enriched_links_PB.csv"
   FILTERED_EDGES_PB_EP4: "{inputs}/filtered_edges_significant_invariant_PB_ep4.parquet"
   KO_PROGRAM_DIR:        "{inputs}/prdm1_ko/bcl6_dynamic_activity_KO_program"
 
-  # --- T-cell (DEAD root) ---------------------------------------------------
+  # --- T-cell ----------------------------------------------------------------
   # analysis/t_cell_analysis, dynamic_grn/t_cell_dictys_data,
   # trajectory/t_cell_{trajectory,imputation}
   TCELL_OUTPUT:          "{tcell}/output"
@@ -143,7 +154,7 @@ scalars:
   TCELL_DICTYS_ALL_DATA: "{tcell_outs}/dictys/rbpj_ets1_ikzf1_ntc/data"
   TCELL_ROOT:            "{tcell_root}"
 
-  # --- Male donor, pre-dictys (DEAD root) -----------------------------------
+  # --- Male donor, pre-dictys --------------------------------------------------
   # trajectory/traj_stream_male_donor, trajectory/imputation_male_donor,
   # dynamic_grn/data_prep_and_checks
   MALE_STREAM_INPUT:     "{donor1}/other_files/objects/stream_input_filtered_cells_v7.h5ad"
@@ -164,7 +175,7 @@ scalars:
   DONOR1_DAY3_4:         "{donor1_d34}"
   DONOR1_DAY5_6:         "{donor1_d56}"
 
-  # --- Female donor (DEAD root) ---------------------------------------------
+  # --- Female donor ------------------------------------------------------------
   # trajectory/traj_stream_female_donor, trajectory/imputation_female_donor
   FEMALE_SC_PROCESSED:   "{donor2}/anndata/female_sc_processed.h5ad"
   FEMALE_STREAM_INPUT:   "{donor2}/h5ad_objects/stream_input_filtered_cells.h5ad"
@@ -188,7 +199,7 @@ scalars:
   VELOCITY_STREAM_OUTS:  "{velocity_in}/stream_outs"   # where traj_stream_male_donor writes branch/edge/dist
   VELOCITY_IN_BASE:      "{velocity_in}"
 
-  # --- Motif databases (DEAD root) ------------------------------------------
+  # --- Motif databases -----------------------------------------------------
   # dynamic_grn/data_prep_and_checks
   MOTIF_DIR:             "{motifs}"
   MOTIF_CISBP_MEME:      "{motifs}/CisBP_Human_FigR_meme"
@@ -197,7 +208,10 @@ scalars:
 
 
 groups:
-  # State-discriminative latent factors, per branch
+  # Episodic enrichment of the GC-vs-PB cellular program, per branch. The program is
+  # the UNION of Z11 and Z3 (LF_Z11_GC_PB + LF_Z3_GC_PB, HLA- dropped), not Z11 alone,
+  # despite the z11_* figure names. Regenerated 2026-09-11 with the fixed code by
+  # analysis/run_episodic_enrichment_bcell.py; see the README next to the tables.
   PB:
     template: "{enrichment}/enrichment_ep{i}_pb.csv"
     n_episodes: 4
@@ -207,13 +221,13 @@ groups:
 
   # TF knockouts (B cell)
   IRF4:
-    template: "{inputs}/irf4_ko/gc_98_fixed/enrichment_episode_{i}.csv"
+    template: "{inputs}/irf4_ko/gc_98/enrichment_episode_{i}.csv"
     n_episodes: 8
   BLIMP1:
-    template: "{inputs}/prdm1_ko/gc_98_fixed/enrichment_episode_{i}.csv"
+    template: "{inputs}/prdm1_ko/gc_98/enrichment_episode_{i}.csv"
     n_episodes: 8
 
-  # TF knockouts (T cell) -- DEAD root
+  # TF knockouts (T cell)
   ETS1_SIG:
     template: "{tcell}/output/ets1/sig_LFs/enrichment_episode_{i}.csv"
     n_episodes: 6
